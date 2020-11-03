@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace StarterKit.Web
+namespace StarterKit.Hangfire.Web
 {
     public class Program
     {

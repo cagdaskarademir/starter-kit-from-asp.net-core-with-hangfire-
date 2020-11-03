@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Builder;
@@ -6,8 +7,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using StarterKit.Hangfire.Web.Jobs;
+using RecurringJob = Hangfire.RecurringJob;
 
-namespace StarterKit.Web
+namespace StarterKit.Hangfire.Web
 {
     public class Startup
     {
@@ -20,6 +23,10 @@ namespace StarterKit.Web
                     .UseSimpleAssemblyNameTypeSerializer()
                     .UseRecommendedSerializerSettings()
                     .UseMemoryStorage());
+
+            services.AddTransient<IRecurringJob, CustomRecurringJob>();
+
+            services.BuildServiceProvider();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,8 +50,22 @@ namespace StarterKit.Web
                 });
             });
 
-            backgroundJobs.Enqueue(() => Console.WriteLine("Hello world from Hangfire!"));
-            RecurringJob.AddOrUpdate(() => Console.Write("Hello world from Recurring Hangfire!!"), Cron.Minutely);
+            while (true)
+            {
+                try
+                {
+                    using var service = app.ApplicationServices.GetService<IRecurringJob>();
+                    // Thread.Sleep(3000);
+                    RecurringJob.AddOrUpdate("Recurring Random",() => service.GenerateGuid(),Cron.Minutely);
+
+                    return;
+                }
+                catch (Exception e)
+                {
+                   Thread.Sleep(3000);
+                }
+            }
+           
 
         }
     }
